@@ -37,14 +37,14 @@ cd ~/jams  # or wherever your project is located
 git remote -v
 
 # If remote is not set, add it:
-git remote add origin https://github.com/rickjefferson/jams.git
+git remote add origin https://github.com/rjbizsolution23-wq/jams.git
 
 # Push to GitHub
 git push -u origin main
 ```
 
 **When prompted for credentials:**
-- **Username**: `rickjefferson`
+- **Username**: `rjbizsolution23-wq`
 - **Password**: `YOUR_GITHUB_PERSONAL_ACCESS_TOKEN`
 
 ### Alternative: Use Token in URL
@@ -52,7 +52,7 @@ git push -u origin main
 If authentication fails, use the token directly in the URL:
 
 ```bash
-git remote set-url origin https://YOUR_GITHUB_PERSONAL_ACCESS_TOKEN@github.com/rickjefferson/jams.git
+git remote set-url origin https://YOUR_GITHUB_PERSONAL_ACCESS_TOKEN@github.com/rjbizsolution23-wq/jams.git
 git push -u origin main
 ```
 
@@ -85,7 +85,7 @@ Add these topics:
 4. **Folder**: `/docs`
 5. **Click**: Save
 
-Your site will be at: `https://rickjefferson.github.io/jams/`
+Your site will be at: `https://rjbizsolution23-wq.github.io/jams/`
 
 ### 3. Create First Release
 
@@ -114,7 +114,7 @@ See [README.md](README.md) for installation instructions.
 
 ## Documentation
 
-- [Full Documentation](https://rickjefferson.github.io/jams/)
+- [Full Documentation](https://rjbizsolution23-wq.github.io/jams/)
 - [API Reference](http://localhost:8000/docs)
 - [Cloudflare Setup Guide](docs/CLOUDFLARE_SETUP.md)
 
@@ -154,10 +154,10 @@ After upload, your repository will show:
 
 ## 🔗 Repository Links
 
-- **Repository**: https://github.com/rickjefferson/jams
-- **Issues**: https://github.com/rickjefferson/jams/issues
-- **Releases**: https://github.com/rickjefferson/jams/releases
-- **GitHub Pages**: https://rickjefferson.github.io/jams/
+- **Repository**: https://github.com/rjbizsolution23-wq/jams
+- **Issues**: https://github.com/rjbizsolution23-wq/jams/issues
+- **Releases**: https://github.com/rjbizsolution23-wq/jams/releases
+- **GitHub Pages**: https://rjbizsolution23-wq.github.io/jams/
 
 ## ✅ Verification
 
@@ -174,7 +174,7 @@ After upload, verify:
 Your **Jukeyman Autonomous Media Station (JAMS)** repository is now live on GitHub!
 
 **Share it:**
-- Twitter/X: "🚀 Just launched JAMS - Jukeyman Autonomous Media Station! The world's most advanced multi-tenant AI content generation platform. https://github.com/rickjefferson/jams"
+- Twitter/X: "🚀 Just launched JAMS - Jukeyman Autonomous Media Station! The world's most advanced multi-tenant AI content generation platform. https://github.com/rjbizsolution23-wq/jams"
 - LinkedIn: Share the repository link with a professional post
 - Reddit: r/MachineLearning, r/artificial, r/Python, r/selfhosted
 

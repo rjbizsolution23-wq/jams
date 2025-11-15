@@ -4,9 +4,9 @@
 
 set -e
 
-GITHUB_TOKEN="YOUR_GITHUB_PERSONAL_ACCESS_TOKEN"
+GITHUB_TOKEN="${GITHUB_TOKEN:-your_github_personal_access_token_here}"
 REPO_NAME="jams"
-REPO_OWNER="rickjefferson"
+REPO_OWNER="rjbizsolution23-wq"
 REPO_URL="https://github.com/${REPO_OWNER}/${REPO_NAME}.git"
 
 echo "🚀 Uploading JAMS to GitHub..."

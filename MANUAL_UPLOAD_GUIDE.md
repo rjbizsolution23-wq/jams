@@ -22,14 +22,14 @@ cd ~/jams  # or your project directory
 cd ~/jams  # or wherever your project is
 
 # Add remote (if not already added)
-git remote add origin https://github.com/rickjefferson/jams.git
+git remote add origin https://github.com/rjbizsolution23-wq/jams.git
 
 # Push to GitHub
 git push -u origin main
 ```
 
 **When prompted:**
-- **Username**: `rickjefferson`
+- **Username**: `rjbizsolution23-wq`
 - **Password**: Use your GitHub Personal Access Token:
   `YOUR_GITHUB_PERSONAL_ACCESS_TOKEN`
 
@@ -50,7 +50,7 @@ gh repo create jams --public --description "Jukeyman Autonomous Media Station (J
 7. Then run:
 
 ```bash
-git remote add origin https://github.com/rickjefferson/jams.git
+git remote add origin https://github.com/rjbizsolution23-wq/jams.git
 git push -u origin main
 ```
 
@@ -59,7 +59,7 @@ git push -u origin main
 If you get authentication errors, use token in URL:
 
 ```bash
-git remote set-url origin https://YOUR_GITHUB_PERSONAL_ACCESS_TOKEN@github.com/rickjefferson/jams.git
+git remote set-url origin https://YOUR_GITHUB_PERSONAL_ACCESS_TOKEN@github.com/rjbizsolution23-wq/jams.git
 git push -u origin main
 ```
 
@@ -67,7 +67,7 @@ git push -u origin main
 
 After successful upload:
 
-- [ ] Visit https://github.com/rickjefferson/jams
+- [ ] Visit https://github.com/rjbizsolution23-wq/jams
 - [ ] Add repository topics:
   - `ai`
   - `content-generation`
@@ -93,7 +93,7 @@ After successful upload:
 
 - **Name**: `jams`
 - **Full Name**: Jukeyman Autonomous Media Station (JAMS)
-- **URL**: https://github.com/rickjefferson/jams
+- **URL**: https://github.com/rjbizsolution23-wq/jams
 - **Description**: Jukeyman Autonomous Media Station (JAMS) - The World's Most Advanced Multi-Tenant AI Content Generation Platform
 - **License**: MIT
 - **Visibility**: Public
