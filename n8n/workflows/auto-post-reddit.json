@@ -1,0 +1,135 @@
+{
+  "name": "Auto-Post to Reddit",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "product-published-reddit",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook - Product Published",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "webhookId": "product-published-reddit"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Select appropriate subreddit based on product category\nconst product = $input.item.json;\n\nconst subredditMap = {\n  'foot-fetish': 'FootFetish',\n  'bdsm': 'BDSMcommunity',\n  'latex': 'LatexLovers',\n  'cosplay': 'NSFWcosplay',\n  'anime': 'animeNSFW'\n};\n\nconst subreddit = subredditMap[product.category] || 'NSFW';\n\nconst title = `${product.name} - Premium Content Pack`;\nconst text = `${product.description}\n\n💰 Price: $${product.price}\n🔗 Link: ${process.env.FETISHVERSE_URL}/products/${product.slug}\n\n#NSFW #AdultContent`;\n\nreturn {\n  json: {\n    subreddit: subreddit,\n    title: title,\n    text: text,\n    product: product\n  }\n};"
+      },
+      "id": "format-post",
+      "name": "Format Reddit Post",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "operation": "submit",
+        "subreddit": "={{ $json.subreddit }}",
+        "title": "={{ $json.title }}",
+        "text": "={{ $json.text }}",
+        "kind": "self"
+      },
+      "id": "post-reddit",
+      "name": "Post to Reddit",
+      "type": "n8n-nodes-base.reddit",
+      "typeVersion": 1.1,
+      "position": [650, 300],
+      "credentials": {
+        "redditOAuth2Api": {
+          "id": "reddit-credentials",
+          "name": "Reddit OAuth2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "table": "products",
+        "updateKey": "id",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "reddit_posted": true,
+            "reddit_post_id": "={{ $('Post to Reddit').item.json.id }}"
+          }
+        }
+      },
+      "id": "update-database",
+      "name": "Update Database",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [650, 500],
+      "credentials": {
+        "postgres": {
+          "id": "postgres-credentials",
+          "name": "Supabase PostgreSQL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"success\": true, \"reddit_post_id\": $json.id } }}"
+      },
+      "id": "webhook-response",
+      "name": "Webhook Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [850, 300]
+    }
+  ],
+  "connections": {
+    "Webhook - Product Published": {
+      "main": [
+        [
+          {
+            "node": "Format Reddit Post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Reddit Post": {
+      "main": [
+        [
+          {
+            "node": "Post to Reddit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post to Reddit": {
+      "main": [
+        [
+          {
+            "node": "Webhook Response",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Update Database",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2025-01-15T00:00:00.000Z",
+  "versionId": "1"
+}
+
