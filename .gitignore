@@ -1,0 +1,159 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environment
+venv/
+env/
+ENV/
+.venv
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Environment Variables
+.env
+.env.local
+.env.*.local
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
+logs/
+*.log.*
+
+# AI Models (too large for git)
+*.safetensors
+*.ckpt
+*.pth
+*.pt
+*.gguf
+*.bin
+models/
+checkpoints/
+weights/
+
+# Generated Content
+output/
+generated/
+temp/
+tmp/
+*.mp4
+*.avi
+*.mov
+*.wav
+*.mp3
+*.png
+*.jpg
+*.jpeg
+*.webp
+
+# Docker
+.dockerignore
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# Coverage
+.coverage
+htmlcov/
+.pytest_cache/
+.coverage.*
+
+# Jupyter Notebooks
+.ipynb_checkpoints
+*.ipynb
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre
+.pyre/
+
+# Secrets
+secrets/
+*.pem
+*.key
+*.crt
+*.p12
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Project Specific
+/workspace/
+/data/
+/storage/
+*.pid
+*.lock
+
+# Cloudflare
+.cloudflared/
+cloudflared-*.json
+
+# n8n
+n8n_data/
+
+# Grafana
+grafana_data/
+
+# Prometheus
+prometheus_data/
+
+# Redis
+dump.rdb
+
+# PostgreSQL
+*.sql.backup
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.swp
+
+# Node modules (if frontend added)
+node_modules/
+.next/
+out/
+.nuxt/
+.cache/
+
+# Build artifacts
+dist/
+build/
+*.tar.gz
+*.zip
+

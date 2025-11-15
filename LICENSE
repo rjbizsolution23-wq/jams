@@ -1,0 +1,63 @@
+MIT License
+
+Copyright (c) 2025 RJ Business Solutions
+Copyright (c) 2025 Rick Jefferson
+
+Jukeyman Autonomous Media Station (JAMS)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+ADDITIONAL TERMS:
+
+1. CONTENT POLICY: This software supports both censored and uncensored content
+   generation. Users are solely responsible for ensuring all generated content
+   complies with applicable laws and regulations.
+
+2. COMMERCIAL USE: This software may be used for commercial purposes. However,
+   users must ensure compliance with all applicable laws, including but not
+   limited to:
+   - Age verification requirements
+   - Content distribution regulations
+   - Intellectual property rights
+   - Platform terms of service
+
+3. NO WARRANTY: The authors make no warranties regarding:
+   - Content generation quality
+   - System uptime or availability
+   - Data security or privacy
+   - Compliance with specific regulations
+
+4. LIABILITY: In no event shall the authors be liable for any damages arising
+   from the use of this software, including but not limited to:
+   - Legal consequences of generated content
+   - Data loss or security breaches
+   - Financial losses
+   - Reputational damage
+
+5. THIRD-PARTY SERVICES: This software integrates with third-party services
+   (Cloudflare, Stripe, etc.). Users are responsible for compliance with
+   those services' terms of service.
+
+6. AI MODELS: This software uses various AI models. Users are responsible for
+   ensuring compliance with model licenses and terms of use.
+
+By using this software, you agree to these terms and conditions.
+
