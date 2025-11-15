@@ -87,7 +87,14 @@ export default function WorkflowsPage() {
               <CardContent>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-400">{workflow.steps} steps</span>
-                  <Button size="sm" variant="outline">
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => {
+                      // TODO: Execute workflow via API
+                      console.log('Execute workflow:', workflow.id);
+                    }}
+                  >
                     <Play className="h-3 w-3 mr-1" />
                     Execute
                   </Button>

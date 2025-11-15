@@ -26,11 +26,22 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
+import { useAgents } from "@/lib/hooks/useAgents";
 
 export default function DashboardPage() {
   const { agents } = useAgentStore();
   const { workflows } = useWorkflowStore();
   const { files } = useAudioStore();
+  
+  // Load agents from API
+  const { data: apiAgents, isLoading: agentsLoading } = useAgents();
+  
+  // Update store when API agents load
+  React.useEffect(() => {
+    if (apiAgents && apiAgents.length > 0) {
+      useAgentStore.getState().setAgents(apiAgents);
+    }
+  }, [apiAgents]);
 
   const [recentActivity, setRecentActivity] = React.useState<string[]>([
     "System initialized successfully",
@@ -110,7 +121,14 @@ export default function DashboardPage() {
                 </div>
               </div>
               <div className="flex gap-2">
-                <Button size="lg" href="/agents">
+                <Button 
+                  size="lg" 
+                  onClick={() => {
+                    if (typeof window !== 'undefined') {
+                      window.location.href = '/agents';
+                    }
+                  }}
+                >
                   <Play className="h-5 w-5 mr-2" />
                   Start Creating
                 </Button>
@@ -266,7 +284,11 @@ export default function DashboardPage() {
                       <Button
                         variant="outline"
                         className="h-auto flex-col items-start p-4 w-full"
-                        href={action.href}
+                        onClick={() => {
+                          if (typeof window !== 'undefined') {
+                            window.location.href = action.href;
+                          }
+                        }}
                       >
                         <action.icon className={`h-6 w-6 ${action.color} mb-2`} />
                         <span className="text-sm font-medium text-gray-100">

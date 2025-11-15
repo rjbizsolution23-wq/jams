@@ -169,7 +169,13 @@ export default function ProjectsPage() {
               className="pl-10"
             />
           </div>
-          <Button size="lg">
+          <Button 
+            size="lg"
+            onClick={() => {
+              // TODO: Open new project modal
+              console.log('New project clicked');
+            }}
+          >
             <Plus className="h-4 w-4 mr-2" />
             New Project
           </Button>

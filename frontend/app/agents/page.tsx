@@ -103,14 +103,46 @@ export default function AgentsPage() {
   const [modalOpen, setModalOpen] = React.useState(false);
   const [favoriteAgents, setFavoriteAgents] = React.useState<Set<string>>(new Set());
   
-  const { agents, selectedAgent, selectAgent, setAgents } = useAgentStore();
+  const { agents, selectedAgent, selectAgent, setAgents, setLoading, setError } = useAgentStore();
 
-  // Initialize agents
+  // Load agents from API
   React.useEffect(() => {
-    if (agents.length === 0) {
-      setAgents(generateAgents());
-    }
-  }, [agents.length, setAgents]);
+    const loadAgents = async () => {
+      if (agents.length > 0) return; // Already loaded
+      
+      setLoading(true);
+      try {
+        const response = await fetch('https://jams-api.rickjefferson.workers.dev/api/v1/agents');
+        if (!response.ok) {
+          throw new Error('Failed to load agents');
+        }
+        const data = await response.json();
+        
+        // Transform API response to match Agent interface
+        const apiAgents: Agent[] = (data.agents || []).map((agent: any, index: number) => ({
+          id: agent.id || `agent-${index}`,
+          name: agent.name || 'Unknown Agent',
+          department: agent.department || 'Production',
+          role: agent.capabilities?.[0] || 'Agent',
+          status: agent.status || 'idle',
+          tasksCompleted: 0,
+          capabilities: agent.capabilities || [],
+        }));
+        
+        setAgents(apiAgents.length > 0 ? apiAgents : generateAgents()); // Fallback to mock if empty
+        setError(null);
+      } catch (error: any) {
+        console.error('Failed to load agents from API:', error);
+        setError(error.message);
+        // Fallback to mock agents if API fails
+        setAgents(generateAgents());
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadAgents();
+  }, [agents.length, setAgents, setLoading, setError]);
 
   const filteredAgents = agents.filter((agent) => {
     const matchesSearch = agent.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
