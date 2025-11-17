@@ -157,3 +157,6 @@ build/
 *.tar.gz
 *.zip
 
+
+# Wrangler local build files
+.wrangler/
