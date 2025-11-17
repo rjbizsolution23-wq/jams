@@ -429,6 +429,652 @@ function getAllModels() {
 }
 
 /**
+ * Generate UUID
+ */
+function generateId() {
+  return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+}
+
+/**
+ * Projects API Handlers
+ */
+async function handleProjectsList(env, corsHeaders) {
+  if (!env.DB) {
+    return jsonResponse({ projects: [], total: 0 }, 200, corsHeaders);
+  }
+  
+  try {
+    const result = await env.DB.prepare(
+      "SELECT * FROM projects WHERE status != 'deleted' ORDER BY created_at DESC LIMIT 100"
+    ).all();
+    
+    return jsonResponse({
+      projects: result.results || [],
+      total: result.results?.length || 0,
+    }, 200, corsHeaders);
+  } catch (error) {
+    return jsonResponse({ error: 'Database error', message: error.message }, 500, corsHeaders);
+  }
+}
+
+async function handleProjectCreate(request, env, corsHeaders) {
+  if (!env.DB) {
+    return jsonResponse({ error: 'Database not available' }, 503, corsHeaders);
+  }
+  
+  try {
+    const body = await request.json();
+    const { name, description, owner_id = 'user-default' } = body;
+    
+    if (!name) {
+      return jsonResponse({ error: 'Name required' }, 400, corsHeaders);
+    }
+    
+    const id = generateId();
+    const now = Math.floor(Date.now() / 1000);
+    
+    await env.DB.prepare(
+      "INSERT INTO projects (id, owner_id, name, description, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)"
+    ).bind(id, owner_id, name, description || null, now, now).run();
+    
+    return jsonResponse({
+      id,
+      name,
+      description,
+      owner_id,
+      status: 'active',
+      created_at: now,
+      updated_at: now,
+    }, 201, corsHeaders);
+  } catch (error) {
+    return jsonResponse({ error: 'Failed to create project', message: error.message }, 500, corsHeaders);
+  }
+}
+
+async function handleProjectGet(id, env, corsHeaders) {
+  if (!env.DB) {
+    return jsonResponse({ error: 'Database not available' }, 503, corsHeaders);
+  }
+  
+  try {
+    const result = await env.DB.prepare(
+      "SELECT * FROM projects WHERE id = ? AND status != 'deleted'"
+    ).bind(id).first();
+    
+    if (!result) {
+      return jsonResponse({ error: 'Project not found' }, 404, corsHeaders);
+    }
+    
+    return jsonResponse(result, 200, corsHeaders);
+  } catch (error) {
+    return jsonResponse({ error: 'Database error', message: error.message }, 500, corsHeaders);
+  }
+}
+
+async function handleProjectUpdate(id, request, env, corsHeaders) {
+  if (!env.DB) {
+    return jsonResponse({ error: 'Database not available' }, 503, corsHeaders);
+  }
+  
+  try {
+    const body = await request.json();
+    const { name, description, status } = body;
+    const now = Math.floor(Date.now() / 1000);
+    
+    const updates = [];
+    const binds = [];
+    
+    if (name !== undefined) {
+      updates.push('name = ?');
+      binds.push(name);
+    }
+    if (description !== undefined) {
+      updates.push('description = ?');
+      binds.push(description);
+    }
+    if (status !== undefined) {
+      updates.push('status = ?');
+      binds.push(status);
+    }
+    
+    updates.push('updated_at = ?');
+    binds.push(now);
+    binds.push(id);
+    
+    await env.DB.prepare(
+      `UPDATE projects SET ${updates.join(', ')} WHERE id = ?`
+    ).bind(...binds).run();
+    
+    return handleProjectGet(id, env, corsHeaders);
+  } catch (error) {
+    return jsonResponse({ error: 'Failed to update project', message: error.message }, 500, corsHeaders);
+  }
+}
+
+async function handleProjectDelete(id, env, corsHeaders) {
+  if (!env.DB) {
+    return jsonResponse({ error: 'Database not available' }, 503, corsHeaders);
+  }
+  
+  try {
+    await env.DB.prepare(
+      "UPDATE projects SET status = 'deleted', updated_at = ? WHERE id = ?"
+    ).bind(Math.floor(Date.now() / 1000), id).run();
+    
+    return jsonResponse({ success: true, message: 'Project deleted' }, 200, corsHeaders);
+  } catch (error) {
+    return jsonResponse({ error: 'Failed to delete project', message: error.message }, 500, corsHeaders);
+  }
+}
+
+/**
+ * Workflows API Handlers
+ */
+async function handleWorkflowsList(env, corsHeaders) {
+  if (!env.DB) {
+    return jsonResponse({ workflows: [], total: 0 }, 200, corsHeaders);
+  }
+  
+  try {
+    const result = await env.DB.prepare(
+      "SELECT * FROM workflows WHERE status != 'archived' ORDER BY created_at DESC LIMIT 100"
+    ).all();
+    
+    return jsonResponse({
+      workflows: result.results || [],
+      total: result.results?.length || 0,
+    }, 200, corsHeaders);
+  } catch (error) {
+    return jsonResponse({ error: 'Database error', message: error.message }, 500, corsHeaders);
+  }
+}
+
+async function handleWorkflowCreate(request, env, corsHeaders) {
+  if (!env.DB) {
+    return jsonResponse({ error: 'Database not available' }, 503, corsHeaders);
+  }
+  
+  try {
+    const body = await request.json();
+    const { name, description, project_id, graph_json } = body;
+    
+    if (!name || !graph_json) {
+      return jsonResponse({ error: 'Name and graph_json required' }, 400, corsHeaders);
+    }
+    
+    const id = generateId();
+    const now = Math.floor(Date.now() / 1000);
+    
+    await env.DB.prepare(
+      "INSERT INTO workflows (id, project_id, name, description, graph_json, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)"
+    ).bind(id, project_id || null, name, description || null, JSON.stringify(graph_json), now, now).run();
+    
+    return jsonResponse({
+      id,
+      name,
+      description,
+      project_id,
+      graph_json,
+      status: 'draft',
+      created_at: now,
+      updated_at: now,
+    }, 201, corsHeaders);
+  } catch (error) {
+    return jsonResponse({ error: 'Failed to create workflow', message: error.message }, 500, corsHeaders);
+  }
+}
+
+async function handleWorkflowGet(id, env, corsHeaders) {
+  if (!env.DB) {
+    return jsonResponse({ error: 'Database not available' }, 503, corsHeaders);
+  }
+  
+  try {
+    const result = await env.DB.prepare(
+      "SELECT * FROM workflows WHERE id = ? AND status != 'archived'"
+    ).bind(id).first();
+    
+    if (!result) {
+      return jsonResponse({ error: 'Workflow not found' }, 404, corsHeaders);
+    }
+    
+    // Parse JSON fields
+    if (result.graph_json) {
+      result.graph_json = JSON.parse(result.graph_json);
+    }
+    
+    return jsonResponse(result, 200, corsHeaders);
+  } catch (error) {
+    return jsonResponse({ error: 'Database error', message: error.message }, 500, corsHeaders);
+  }
+}
+
+async function handleWorkflowUpdate(id, request, env, corsHeaders) {
+  if (!env.DB) {
+    return jsonResponse({ error: 'Database not available' }, 503, corsHeaders);
+  }
+  
+  try {
+    const body = await request.json();
+    const { name, description, graph_json, status } = body;
+    const now = Math.floor(Date.now() / 1000);
+    
+    const updates = [];
+    const binds = [];
+    
+    if (name !== undefined) {
+      updates.push('name = ?');
+      binds.push(name);
+    }
+    if (description !== undefined) {
+      updates.push('description = ?');
+      binds.push(description);
+    }
+    if (graph_json !== undefined) {
+      updates.push('graph_json = ?');
+      binds.push(JSON.stringify(graph_json));
+    }
+    if (status !== undefined) {
+      updates.push('status = ?');
+      binds.push(status);
+    }
+    
+    updates.push('updated_at = ?');
+    binds.push(now);
+    binds.push(id);
+    
+    await env.DB.prepare(
+      `UPDATE workflows SET ${updates.join(', ')} WHERE id = ?`
+    ).bind(...binds).run();
+    
+    return handleWorkflowGet(id, env, corsHeaders);
+  } catch (error) {
+    return jsonResponse({ error: 'Failed to update workflow', message: error.message }, 500, corsHeaders);
+  }
+}
+
+async function handleWorkflowDelete(id, env, corsHeaders) {
+  if (!env.DB) {
+    return jsonResponse({ error: 'Database not available' }, 503, corsHeaders);
+  }
+  
+  try {
+    await env.DB.prepare(
+      "UPDATE workflows SET status = 'archived', updated_at = ? WHERE id = ?"
+    ).bind(Math.floor(Date.now() / 1000), id).run();
+    
+    return jsonResponse({ success: true, message: 'Workflow deleted' }, 200, corsHeaders);
+  } catch (error) {
+    return jsonResponse({ error: 'Failed to delete workflow', message: error.message }, 500, corsHeaders);
+  }
+}
+
+async function handleWorkflowExecute(id, request, env, corsHeaders) {
+  if (!env.DB) {
+    return jsonResponse({ error: 'Database not available' }, 503, corsHeaders);
+  }
+  
+  try {
+    const workflow = await env.DB.prepare(
+      "SELECT * FROM workflows WHERE id = ? AND status != 'archived'"
+    ).bind(id).first();
+    
+    if (!workflow) {
+      return jsonResponse({ error: 'Workflow not found' }, 404, corsHeaders);
+    }
+    
+    const graph = JSON.parse(workflow.graph_json || '{}');
+    const nodes = graph.nodes || [];
+    const edges = graph.edges || [];
+    
+    // Execute workflow (similar to existing workflow execution)
+    const executionId = generateId();
+    const now = Math.floor(Date.now() / 1000);
+    
+    await env.DB.prepare(
+      "INSERT INTO executions (id, workflow_id, project_id, agent_name, model_id, task, status, started_at, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+    ).bind(executionId, id, workflow.project_id, 'Workflow Execution', 'deepseek/deepseek-chat', `Execute workflow: ${workflow.name}`, 'running', now, now).run();
+    
+    // Execute each agent node
+    const results = [];
+    for (const node of nodes) {
+      if (node.type === 'agent' && node.data?.task) {
+        try {
+          // Call handleAgentRun directly with proper request object
+          const agentRequest = new Request('http://internal/api/v1/agent/run', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              agent_name: node.data.label || 'Agent',
+              task: node.data.task,
+              model: node.data.model || 'deepseek/deepseek-chat',
+            }),
+          });
+          
+          const response = await handleAgentRun(agentRequest, env, corsHeaders);
+          const responseData = await response.json();
+          results.push({ node: node.id, success: responseData.success, result: responseData.result });
+        } catch (error) {
+          results.push({ node: node.id, success: false, error: error.message });
+        }
+      }
+    }
+    
+    await env.DB.prepare(
+      "UPDATE executions SET status = ?, result = ?, finished_at = ? WHERE id = ?"
+    ).bind('completed', JSON.stringify(results), Math.floor(Date.now() / 1000), executionId).run();
+    
+    return jsonResponse({
+      success: true,
+      execution_id: executionId,
+      workflow_id: id,
+      results,
+    }, 200, corsHeaders);
+  } catch (error) {
+    return jsonResponse({ error: 'Failed to execute workflow', message: error.message }, 500, corsHeaders);
+  }
+}
+
+/**
+ * Executions API Handlers
+ */
+async function handleExecutionsList(env, corsHeaders) {
+  if (!env.DB) {
+    return jsonResponse({ executions: [], total: 0 }, 200, corsHeaders);
+  }
+  
+  try {
+    const result = await env.DB.prepare(
+      "SELECT * FROM executions ORDER BY created_at DESC LIMIT 100"
+    ).all();
+    
+    return jsonResponse({
+      executions: result.results || [],
+      total: result.results?.length || 0,
+    }, 200, corsHeaders);
+  } catch (error) {
+    return jsonResponse({ error: 'Database error', message: error.message }, 500, corsHeaders);
+  }
+}
+
+async function handleExecutionGet(id, env, corsHeaders) {
+  if (!env.DB) {
+    return jsonResponse({ error: 'Database not available' }, 503, corsHeaders);
+  }
+  
+  try {
+    const result = await env.DB.prepare(
+      "SELECT * FROM executions WHERE id = ?"
+    ).bind(id).first();
+    
+    if (!result) {
+      return jsonResponse({ error: 'Execution not found' }, 404, corsHeaders);
+    }
+    
+    // Parse JSON fields
+    if (result.usage_json) {
+      result.usage = JSON.parse(result.usage_json);
+    }
+    if (result.result) {
+      try {
+        result.result = JSON.parse(result.result);
+      } catch (e) {
+        // Keep as string if not JSON
+      }
+    }
+    
+    return jsonResponse(result, 200, corsHeaders);
+  } catch (error) {
+    return jsonResponse({ error: 'Database error', message: error.message }, 500, corsHeaders);
+  }
+}
+
+async function handleExecutionLogs(id, env, corsHeaders) {
+  if (!env.DB) {
+    return jsonResponse({ logs: [], total: 0 }, 200, corsHeaders);
+  }
+  
+  try {
+    const result = await env.DB.prepare(
+      "SELECT * FROM execution_logs WHERE execution_id = ? ORDER BY created_at ASC"
+    ).bind(id).all();
+    
+    return jsonResponse({
+      logs: result.results || [],
+      total: result.results?.length || 0,
+    }, 200, corsHeaders);
+  } catch (error) {
+    return jsonResponse({ error: 'Database error', message: error.message }, 500, corsHeaders);
+  }
+}
+
+/**
+ * Storage/Library API Handlers
+ */
+async function handleStorageList(env, corsHeaders) {
+  if (!env.DB || !env.MUSIC_STORAGE) {
+    return jsonResponse({ files: [], total: 0 }, 200, corsHeaders);
+  }
+  
+  try {
+    const result = await env.DB.prepare(
+      "SELECT * FROM audio_files WHERE status = 'active' ORDER BY created_at DESC LIMIT 100"
+    ).all();
+    
+    return jsonResponse({
+      files: result.results || [],
+      total: result.results?.length || 0,
+    }, 200, corsHeaders);
+  } catch (error) {
+    return jsonResponse({ error: 'Database error', message: error.message }, 500, corsHeaders);
+  }
+}
+
+async function handleStorageUpload(request, env, corsHeaders) {
+  if (!env.DB || !env.MUSIC_STORAGE) {
+    return jsonResponse({ error: 'Storage not available' }, 503, corsHeaders);
+  }
+  
+  try {
+    const formData = await request.formData();
+    const file = formData.get('file');
+    const projectId = formData.get('project_id') || null;
+    
+    if (!file) {
+      return jsonResponse({ error: 'File required' }, 400, corsHeaders);
+    }
+    
+    const id = generateId();
+    const filename = file.name || `audio-${id}.mp3`;
+    const r2Key = `projects/${projectId || 'default'}/audio/${id}-${filename}`;
+    const now = Math.floor(Date.now() / 1000);
+    
+    // Upload to R2
+    await env.MUSIC_STORAGE.put(r2Key, file.stream(), {
+      httpMetadata: {
+        contentType: file.type || 'audio/mpeg',
+      },
+    });
+    
+    // Save metadata to DB
+    await env.DB.prepare(
+      "INSERT INTO audio_files (id, project_id, r2_key, filename, file_type, size_bytes, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+    ).bind(id, projectId, r2Key, filename, filename.split('.').pop() || 'mp3', file.size, now, now).run();
+    
+    // Generate public URL for access (R2 public bucket)
+    // Note: In production, use signed URLs for private buckets
+    const url = `https://music-empire-audio.rickjefferson.r2.cloudflarestorage.com/${r2Key}`;
+    
+    return jsonResponse({
+      id,
+      filename,
+      r2_key: r2Key,
+      url,
+      size_bytes: file.size,
+      project_id: projectId,
+      created_at: now,
+    }, 201, corsHeaders);
+  } catch (error) {
+    return jsonResponse({ error: 'Failed to upload file', message: error.message }, 500, corsHeaders);
+  }
+}
+
+async function handleStorageGet(id, env, corsHeaders) {
+  if (!env.DB || !env.MUSIC_STORAGE) {
+    return jsonResponse({ error: 'Storage not available' }, 503, corsHeaders);
+  }
+  
+  try {
+    const result = await env.DB.prepare(
+      "SELECT * FROM audio_files WHERE id = ? AND status = 'active'"
+    ).bind(id).first();
+    
+    if (!result) {
+      return jsonResponse({ error: 'File not found' }, 404, corsHeaders);
+    }
+    
+    // Generate public URL for access (R2 public bucket)
+    // Note: In production, use signed URLs for private buckets
+    const url = `https://music-empire-audio.rickjefferson.r2.cloudflarestorage.com/${result.r2_key}`;
+    
+    return jsonResponse({
+      ...result,
+      url,
+    }, 200, corsHeaders);
+  } catch (error) {
+    return jsonResponse({ error: 'Database error', message: error.message }, 500, corsHeaders);
+  }
+}
+
+async function handleStorageDelete(id, env, corsHeaders) {
+  if (!env.DB || !env.MUSIC_STORAGE) {
+    return jsonResponse({ error: 'Storage not available' }, 503, corsHeaders);
+  }
+  
+  try {
+    const file = await env.DB.prepare(
+      "SELECT * FROM audio_files WHERE id = ?"
+    ).bind(id).first();
+    
+    if (!file) {
+      return jsonResponse({ error: 'File not found' }, 404, corsHeaders);
+    }
+    
+    // Delete from R2
+    await env.MUSIC_STORAGE.delete(file.r2_key);
+    
+    // Update status in DB
+    await env.DB.prepare(
+      "UPDATE audio_files SET status = 'deleted', updated_at = ? WHERE id = ?"
+    ).bind(Math.floor(Date.now() / 1000), id).run();
+    
+    return jsonResponse({ success: true, message: 'File deleted' }, 200, corsHeaders);
+  } catch (error) {
+    return jsonResponse({ error: 'Failed to delete file', message: error.message }, 500, corsHeaders);
+  }
+}
+
+/**
+ * Notifications API Handlers
+ */
+async function handleNotificationsList(env, corsHeaders) {
+  if (!env.DB) {
+    return jsonResponse({ notifications: [], total: 0 }, 200, corsHeaders);
+  }
+  
+  try {
+    const result = await env.DB.prepare(
+      "SELECT * FROM notifications ORDER BY created_at DESC LIMIT 50"
+    ).all();
+    
+    return jsonResponse({
+      notifications: result.results || [],
+      total: result.results?.length || 0,
+    }, 200, corsHeaders);
+  } catch (error) {
+    return jsonResponse({ error: 'Database error', message: error.message }, 500, corsHeaders);
+  }
+}
+
+async function handleNotificationsRead(request, env, corsHeaders) {
+  if (!env.DB) {
+    return jsonResponse({ error: 'Database not available' }, 503, corsHeaders);
+  }
+  
+  try {
+    const body = await request.json();
+    const { notification_ids } = body;
+    
+    if (!notification_ids || !Array.isArray(notification_ids)) {
+      return jsonResponse({ error: 'notification_ids array required' }, 400, corsHeaders);
+    }
+    
+    const placeholders = notification_ids.map(() => '?').join(',');
+    await env.DB.prepare(
+      `UPDATE notifications SET read = 1 WHERE id IN (${placeholders})`
+    ).bind(...notification_ids).run();
+    
+    return jsonResponse({ success: true, message: 'Notifications marked as read' }, 200, corsHeaders);
+  } catch (error) {
+    return jsonResponse({ error: 'Failed to mark notifications as read', message: error.message }, 500, corsHeaders);
+  }
+}
+
+/**
+ * Settings API Handlers
+ */
+async function handleSettingsGet(env, corsHeaders) {
+  if (!env.DB) {
+    return jsonResponse({ settings: {} }, 200, corsHeaders);
+  }
+  
+  try {
+    const result = await env.DB.prepare("SELECT key, value_json FROM settings").all();
+    
+    const settings = {};
+    if (result.results) {
+      for (const row of result.results) {
+        try {
+          settings[row.key] = JSON.parse(row.value_json);
+        } catch (e) {
+          settings[row.key] = row.value_json;
+        }
+      }
+    }
+    
+    return jsonResponse({ settings }, 200, corsHeaders);
+  } catch (error) {
+    return jsonResponse({ error: 'Database error', message: error.message }, 500, corsHeaders);
+  }
+}
+
+async function handleSettingsUpdate(request, env, corsHeaders) {
+  if (!env.DB) {
+    return jsonResponse({ error: 'Database not available' }, 503, corsHeaders);
+  }
+  
+  try {
+    const body = await request.json();
+    const { key, value } = body;
+    
+    if (!key) {
+      return jsonResponse({ error: 'Key required' }, 400, corsHeaders);
+    }
+    
+    const valueJson = typeof value === 'string' ? value : JSON.stringify(value);
+    const now = Math.floor(Date.now() / 1000);
+    
+    await env.DB.prepare(
+      "INSERT INTO settings (id, key, value_json, updated_at) VALUES (?, ?, ?, ?) ON CONFLICT(key) DO UPDATE SET value_json = ?, updated_at = ?"
+    ).bind(generateId(), key, valueJson, now, valueJson, now).run();
+    
+    return jsonResponse({ success: true, key, value }, 200, corsHeaders);
+  } catch (error) {
+    return jsonResponse({ error: 'Failed to update settings', message: error.message }, 500, corsHeaders);
+  }
+}
+
+/**
  * Main request handler
  */
 export default {
@@ -474,6 +1120,103 @@ export default {
         return jsonResponse({
           models: getAllModels(),
         }, 200, corsHeaders);
+      }
+
+      // Projects endpoints
+      if (path === '/api/v1/projects' && request.method === 'GET') {
+        return handleProjectsList(env, corsHeaders);
+      }
+      if (path === '/api/v1/projects' && request.method === 'POST') {
+        return handleProjectCreate(request, env, corsHeaders);
+      }
+      const projectMatch = path.match(/^\/api\/v1\/projects\/(.+)$/);
+      if (projectMatch) {
+        const projectId = projectMatch[1];
+        if (request.method === 'GET') {
+          return handleProjectGet(projectId, env, corsHeaders);
+        }
+        if (request.method === 'PUT') {
+          return handleProjectUpdate(projectId, request, env, corsHeaders);
+        }
+        if (request.method === 'DELETE') {
+          return handleProjectDelete(projectId, env, corsHeaders);
+        }
+      }
+
+      // Workflows endpoints
+      if (path === '/api/v1/workflows' && request.method === 'GET') {
+        return handleWorkflowsList(env, corsHeaders);
+      }
+      if (path === '/api/v1/workflows' && request.method === 'POST') {
+        return handleWorkflowCreate(request, env, corsHeaders);
+      }
+      // Workflow execute endpoint (check before generic workflow ID match)
+      const workflowExecuteMatch = path.match(/^\/api\/v1\/workflows\/(.+)\/execute$/);
+      if (workflowExecuteMatch && request.method === 'POST') {
+        return handleWorkflowExecute(workflowExecuteMatch[1], request, env, corsHeaders);
+      }
+      // Generic workflow ID endpoints
+      const workflowMatch = path.match(/^\/api\/v1\/workflows\/(.+)$/);
+      if (workflowMatch) {
+        const workflowId = workflowMatch[1];
+        if (request.method === 'GET') {
+          return handleWorkflowGet(workflowId, env, corsHeaders);
+        }
+        if (request.method === 'PUT') {
+          return handleWorkflowUpdate(workflowId, request, env, corsHeaders);
+        }
+        if (request.method === 'DELETE') {
+          return handleWorkflowDelete(workflowId, env, corsHeaders);
+        }
+      }
+
+      // Executions endpoints
+      if (path === '/api/v1/executions' && request.method === 'GET') {
+        return handleExecutionsList(env, corsHeaders);
+      }
+      // Execution logs endpoint (check before generic execution ID match)
+      const executionLogsMatch = path.match(/^\/api\/v1\/executions\/(.+)\/logs$/);
+      if (executionLogsMatch && request.method === 'GET') {
+        return handleExecutionLogs(executionLogsMatch[1], env, corsHeaders);
+      }
+      // Generic execution ID endpoints
+      const executionMatch = path.match(/^\/api\/v1\/executions\/(.+)$/);
+      if (executionMatch && request.method === 'GET') {
+        return handleExecutionGet(executionMatch[1], env, corsHeaders);
+      }
+
+      // Storage/Library endpoints
+      if (path === '/api/v1/storage' && request.method === 'GET') {
+        return handleStorageList(env, corsHeaders);
+      }
+      if (path === '/api/v1/storage' && request.method === 'POST') {
+        return handleStorageUpload(request, env, corsHeaders);
+      }
+      const storageMatch = path.match(/^\/api\/v1\/storage\/(.+)$/);
+      if (storageMatch) {
+        const fileId = storageMatch[1];
+        if (request.method === 'GET') {
+          return handleStorageGet(fileId, env, corsHeaders);
+        }
+        if (request.method === 'DELETE') {
+          return handleStorageDelete(fileId, env, corsHeaders);
+        }
+      }
+
+      // Notifications endpoints
+      if (path === '/api/v1/notifications' && request.method === 'GET') {
+        return handleNotificationsList(env, corsHeaders);
+      }
+      if (path === '/api/v1/notifications/read' && request.method === 'POST') {
+        return handleNotificationsRead(request, env, corsHeaders);
+      }
+
+      // Settings endpoints
+      if (path === '/api/v1/settings' && request.method === 'GET') {
+        return handleSettingsGet(env, corsHeaders);
+      }
+      if (path === '/api/v1/settings' && request.method === 'PUT') {
+        return handleSettingsUpdate(request, env, corsHeaders);
       }
     }
 

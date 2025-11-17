@@ -18,6 +18,12 @@ preview_bucket_name = "music-empire-audio"
 binding = "CACHE"
 id = "9e1cb9202d884c32a9fa653cbd45e63c"
 
+# D1 Database binding
+[[d1_databases]]
+binding = "DB"
+database_name = "jams-db"
+database_id = "16d1d815-3348-44ff-9b7f-fb05c834ec1c"
+
 # Environment variables (non-sensitive)
 [vars]
 ENVIRONMENT = "production"
